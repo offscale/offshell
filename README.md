@@ -14,9 +14,9 @@ offshell
 
     $ python -m offshell -h
     usage: __main__.py [-h] -n NAME [--version] [--etcd ETCD] [--purpose PURPOSE]
-                       [--load-system-host-keys LOAD_SYSTEM_HOST_KEYS]
+                       [--load-system-host-keys LOAD_SYSTEM_HOST_KEYS] [-o]
     
-    offshell opens an interactive shell into your offscale node
+    offshell opens an interactive shell into your offscale node.
     
     optional arguments:
       -h, --help            show this help message and exit
@@ -29,7 +29,12 @@ offshell
                             (hierarchically). Defaults to: 'unclustered'
       --load-system-host-keys LOAD_SYSTEM_HOST_KEYS
                             Load host keys from a system (read-only) file.
+      -o, --ssh-config      Output SSH config format. Don't connect.
 
 Sane defaults means usually you just:
 
     $ python -m offshell -n node_name
+
+If you prefer to use `ssh`, you can use this to add nodes to your ssh_config like so:
+    
+    $ python -m offshell -n node_name --ssh-config >> ~/.ssh/config
