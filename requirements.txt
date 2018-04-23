@@ -1,0 +1,4 @@
+paramiko
+python-etcd
+apache-libcloud
+https://api.github.com/repos/offscale/offutils-strategy-register/zipball#egg=offutils-strategy-register
