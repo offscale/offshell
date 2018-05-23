@@ -3,6 +3,8 @@
 from __future__ import print_function
 
 from json import loads
+from os.path import exists, expanduser
+from sys import stderr
 
 import yaml
 import logging
@@ -18,7 +20,7 @@ from paramiko import SSHClient
 from offshell.interactive import interactive_shell
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.2'
+__version__ = '0.0.3'
 
 
 def get_logger(name=None):
@@ -53,8 +55,9 @@ def offshell(name, load_system_host_keys, ssh_config, etcd):
             host = node.extra['ssh_config'].pop('Host')
             print('Host {host}\n{rest}'
                   .format(host=host,
-                          rest=tab + tab.join('{} {}\n'.format(k, v)
+                          rest=tab + tab.join('{} {}\n'.format(k, v[0] if isinstance(v, list) else v)
                                               for k, v in node.extra['ssh_config'].iteritems())[:-1]))
+
         else:
             print('Host {hostname}\n'
                   '{tab}User {username}{last_line}'
@@ -64,6 +67,16 @@ def offshell(name, load_system_host_keys, ssh_config, etcd):
                                                                                 key_filename=connection_d[
                                                                                     'key_filename'])
                           if connection_d['key_filename'] else ''))
+        known_hosts = path.join(expanduser('~'), '.ssh', 'known_hosts')
+        s = ''
+        if exists(known_hosts):
+            with open(known_hosts, 'rt') as f:
+                s = f.read()
+        if connection_d['hostname'] not in s:
+            print('After checking the key fingerprint, add it to your known hosts with:'
+                  '\nssh-keyscan {host} >> {known_hosts}'.format(host=connection_d['hostname'],
+                                                                 known_hosts=known_hosts),
+                  file=stderr)
         return
 
     client = SSHClient()
