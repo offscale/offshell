@@ -2,16 +2,14 @@
 
 from __future__ import print_function
 
+import logging
 from json import loads
+from logging.config import dictConfig as _dictConfig
+from os import path
 from os.path import exists, expanduser
 from sys import stderr
 
 import yaml
-import logging
-
-from os import path
-from logging.config import dictConfig as _dictConfig
-
 from etcd import Client
 from libcloud.compute.types import NodeState
 from offutils_strategy_register import dict_to_node
@@ -20,7 +18,7 @@ from paramiko import SSHClient
 from offshell.interactive import interactive_shell
 
 __author__ = 'Samuel Marks'
-__version__ = '0.0.3'
+__version__ = '0.0.4'
 
 
 def get_logger(name=None):
@@ -59,13 +57,15 @@ def offshell(name, load_system_host_keys, ssh_config, etcd):
                                               for k, v in node.extra['ssh_config'].iteritems())[:-1]))
 
         else:
-            print('Host {hostname}\n'
-                  '{tab}User {username}{last_line}'
-                  .format(hostname=connection_d['hostname'], tab=tab,
-                          username=connection_d['username'],
-                          last_line='\n{tab}IdentityFile {key_filename}'.format(tab=tab,
-                                                                                key_filename=connection_d[
-                                                                                    'key_filename'])
+            print('Host {name}\n'
+                  '{tab}HostName {hostname}\n'
+                  '{tab}User {username}\n'
+                  '{last_line}'
+                  .format(name=name.rpartition('/')[2], hostname=connection_d['hostname'],
+                          username=connection_d['username'], tab=tab,
+                          last_line='{tab}IdentityFile {key_filename}'.format(tab=tab,
+                                                                              key_filename=connection_d[
+                                                                                  'key_filename'])
                           if connection_d['key_filename'] else ''))
         known_hosts = path.join(expanduser('~'), '.ssh', 'known_hosts')
         s = ''
