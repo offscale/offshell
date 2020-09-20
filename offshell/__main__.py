@@ -20,7 +20,7 @@ def _build_parser():
         version="{} {}".format(modules[__name__].__package__, __version__),
     )
     parser.add_argument(
-        "--etcd", help="Server location\t[127.0.0.1:4001]", default="127.0.0.1:4001"
+        "--etcd", help="Server location\t[127.0.0.1:2379]", default="127.0.0.1:2379"
     )
     parser.add_argument(
         "--purpose",

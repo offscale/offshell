@@ -9,7 +9,7 @@ from os.path import exists, expanduser
 from sys import stderr
 
 import yaml
-from etcd import Client
+import etcd3
 from libcloud.compute.types import NodeState
 from offutils_strategy_register import dict_to_node
 from paramiko import SSHClient
@@ -22,7 +22,7 @@ __version__ = "0.0.4"
 
 def get_logger(name=None):
     with open(path.join(path.dirname(__file__), "_data", "logging.yml"), "rt") as f:
-        data = yaml.load(f)
+        data = yaml.safe_load(f)
     _dictConfig(data)
     return logging.getLogger(name=name)
 
@@ -34,7 +34,7 @@ logging.getLogger("paramiko").setLevel(logging.CRITICAL)
 
 def offshell(name, load_system_host_keys, ssh_config, etcd):
     host, port = etcd.split(":")
-    node = dict_to_node(loads(Client(host=host, port=int(port)).get(name).value))
+    node = dict_to_node(loads(etcd3.client(host=host, port=int(port)).get(name)[0]))
     if node.state != NodeState.RUNNING:
         raise EnvironmentError(
             "Node isn't running, it's {}. Ensure it's ON, then try again.".format(
