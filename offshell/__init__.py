@@ -5,9 +5,15 @@ from __future__ import print_function
 import logging
 from json import loads
 from logging.config import dictConfig as _dictConfig
+from operator import methodcaller
 from os import path
 from os.path import exists, expanduser
-from sys import stderr
+from sys import stderr, version
+
+if version[0] == "2":
+    iteritems = methodcaller("iteritems")
+else:
+    iteritems = methodcaller("items")
 
 import yaml
 import etcd3
@@ -69,7 +75,7 @@ def offshell(name, load_system_host_keys, ssh_config, etcd):
                     rest=tab
                     + tab.join(
                         "{} {}\n".format(k, v[0] if isinstance(v, list) else v)
-                        for k, v in node.extra["ssh_config"].items()
+                        for k, v in iteritems(node.extra["ssh_config"])
                     )[:-1],
                 )
             )
