@@ -10,11 +10,6 @@ from os import path
 from os.path import exists, expanduser
 from sys import stderr, version
 
-if version[0] == "2":
-    iteritems = methodcaller("iteritems")
-else:
-    iteritems = methodcaller("items")
-
 import yaml
 import etcd3
 from libcloud.compute.types import NodeState
@@ -25,6 +20,8 @@ from offshell.interactive import interactive_shell
 
 __author__ = "Samuel Marks"
 __version__ = "0.0.4"
+
+from offutils.util import iteritems
 
 
 def get_logger(name=None):
@@ -64,10 +61,7 @@ def offshell(name, load_system_host_keys, ssh_config, etcd):
             )
         tab = " " * 4
 
-        if (
-            "ssh_config" in node.extra
-            and len(list(node.extra["ssh_config"].keys())) > 1
-        ):
+        if "ssh_config" in node.extra and len(node.extra["ssh_config"]) > 1:
             host = node.extra["ssh_config"].pop("Host")
             print(
                 "Host {host}\n{rest}".format(
