@@ -5,13 +5,12 @@ from __future__ import print_function
 import logging
 from json import loads
 from logging.config import dictConfig as _dictConfig
-from operator import methodcaller
 from os import path
 from os.path import exists, expanduser
-from sys import stderr, version
+from sys import stderr
 
-import yaml
 import etcd3
+import yaml
 from libcloud.compute.types import NodeState
 from offutils_strategy_register import dict_to_node
 from paramiko import SSHClient
