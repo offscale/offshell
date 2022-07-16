@@ -1,4 +1,6 @@
 from argparse import ArgumentParser
+from os import path
+from os.path import expanduser
 from sys import modules
 
 from offshell import __version__, offshell
@@ -34,6 +36,11 @@ def _build_parser():
         dest="load_system_host_keys",
         default=True,
         help="Load host keys from a system (read-only) file.",
+    )
+    parser.add_argument(
+        "--load-ssh-config",
+        default=path.join(expanduser("~"), ".ssh", "config"),
+        help="Load SSH config from a system (read-only) file.",
     )
     parser.add_argument(
         "-o",

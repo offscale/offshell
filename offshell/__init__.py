@@ -3,6 +3,9 @@
 from __future__ import print_function
 
 import logging
+import sys
+import traceback
+from collections import namedtuple
 from json import loads
 from logging.config import dictConfig as _dictConfig
 from os import path
@@ -10,15 +13,14 @@ from os.path import exists, expanduser
 from sys import stderr
 
 import etcd3
+import paramiko
 import yaml
 from libcloud.compute.types import NodeState
 from offutils_strategy_register import dict_to_node
-from paramiko import SSHClient
-
-from offshell.interactive import interactive_shell
+from paramiko.ssh_gss import GSS_AUTH_AVAILABLE
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 
 from offutils.util import iteritems
 
@@ -35,7 +37,25 @@ root_logger = get_logger()
 logging.getLogger("paramiko").setLevel(logging.CRITICAL)
 
 
-def offshell(name, load_system_host_keys, ssh_config, etcd):
+def offshell(name, load_system_host_keys, load_ssh_config, ssh_config, etcd):
+    """
+    Offshell
+
+    :param name: Name of node. /{purpose}/{node_name} will overwrite `--purpose`.
+    :type name: ```str```
+
+    :param load_system_host_keys: Load host keys from a system (read-only) file.
+    :type load_system_host_keys: ```str```
+
+    :param load_ssh_config: Load SSH config from a system (read-only) file.
+    :type load_ssh_config: ```Optional[str]```
+
+    :param ssh_config: SSH config
+    :type ssh_config: ```dict```
+
+    :param etcd: "host:port" connection string to etcd
+    :type etcd: ```str```
+    """
     host, port = etcd.split(":")
     node = dict_to_node(loads(etcd3.client(host=host, port=int(port)).get(name)[0]))
     if node.state != NodeState.RUNNING:
@@ -53,9 +73,10 @@ def offshell(name, load_system_host_keys, ssh_config, etcd):
         "password": node.extra.get("password"),
         "key_filename": node.extra.get("ssh_config", {}).get("IdentityFile"),
     }
+
     if ssh_config:
         if not connection_d["key_filename"]:
-            root_logger.warn(
+            root_logger.warning(
                 "Cannot set password in ssh_config format. You'll still be prompted."
             )
         tab = " " * 4
@@ -105,11 +126,44 @@ def offshell(name, load_system_host_keys, ssh_config, etcd):
             )
         return
 
-    client = SSHClient()
-    if load_system_host_keys:
-        client.load_system_host_keys()
-    client.connect(**connection_d)
-    chan = client.invoke_shell()
-    interactive_shell(chan)
-    chan.close()
-    client.close()
+    # Paramiko client configuration
+    UseGSSAPI = GSS_AUTH_AVAILABLE  # enable "gssapi-with-mic" authentication, if supported by your python installation
+    DoGSSAPIKeyExchange = GSS_AUTH_AVAILABLE  # enable "gssapi-kex" key exchange, if supported by your python installation
+    # UseGSSAPI = False
+    # DoGSSAPIKeyExchange = False
+    port = 22
+
+    hostname = connection_d["hostname"]
+    if hostname.find(":") >= 0:
+        hostname, portstr = hostname.split(":")
+        port = int(portstr)
+        print("hostname:", hostname, ";")
+
+    # now, connect and use paramiko Client to negotiate SSH2 across the connection
+    client = namedtuple("_", ("close",))(lambda _: _)
+    try:
+        client = paramiko.SSHClient()
+        if load_system_host_keys:
+            client.load_system_host_keys()
+        if path.isfile(load_ssh_config):
+            # Same runaround that Fabric/Invoke does
+            config = paramiko.SSHConfig()
+            with open(load_ssh_config, "rt") as f:
+                config.parse(f)
+            config_options = config.lookup(connection_d["hostname"])
+            connection_d["hostname"] = config_options["hostname"]
+
+        client.set_missing_host_key_policy(paramiko.WarningPolicy())
+        if not UseGSSAPI and not DoGSSAPIKeyExchange:
+            client.connect(**connection_d)
+
+        chan = client.invoke_shell()
+        interactive.interactive_shell(chan)
+        chan.close()
+        client.close()
+
+    except Exception as e:
+        print("*** Caught exception: %s: %s" % (e.__class__, e))
+        traceback.print_exc()
+        client.close()
+        sys.exit(1)

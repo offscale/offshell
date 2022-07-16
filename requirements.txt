@@ -1,4 +1,4 @@
 paramiko
-python-etcd
+etcd3
 apache-libcloud
 https://api.github.com/repos/offscale/offutils-strategy-register/zipball#egg=offutils-strategy-register
