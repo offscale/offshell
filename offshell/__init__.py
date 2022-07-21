@@ -24,6 +24,8 @@ __version__ = "0.0.5"
 
 from offutils.util import iteritems
 
+from offshell import interactive
+
 
 def get_logger(name=None):
     with open(path.join(path.dirname(__file__), "_data", "logging.yml"), "rt") as f:
