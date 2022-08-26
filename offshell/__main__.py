@@ -7,6 +7,12 @@ from offshell import __version__, offshell
 
 
 def _build_parser():
+    """
+    CLI parser builder using builtin `argparse` module
+
+    :returns: instanceof ArgumentParser
+    :rtype: ```ArgumentParser```
+    """
     parser = ArgumentParser(
         description="offshell opens an interactive shell into your offscale node."
     )
