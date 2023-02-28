@@ -2,3 +2,5 @@ paramiko
 etcd3
 apache-libcloud
 https://api.github.com/repos/offscale/offutils-strategy-register/zipball#egg=offutils-strategy-register
+https://api.github.com/repos/offscale/offutils/zipball#egg=offutils
+protobuf==3.20.3

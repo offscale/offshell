@@ -16,25 +16,15 @@ import etcd3
 import paramiko
 import yaml
 from libcloud.compute.types import NodeState
+from offutils.util import iteritems
 from offutils_strategy_register import dict_to_node
 from paramiko.ssh_gss import GSS_AUTH_AVAILABLE
 
-__author__ = "Samuel Marks"
-__version__ = "0.0.5"
-
-from offutils.util import iteritems
-
 from offshell import interactive
 
+__author__ = "Samuel Marks"
+__version__ = "0.0.6"
 
-def get_logger(name=None):
-    with open(path.join(path.dirname(__file__), "_data", "logging.yml"), "rt") as f:
-        data = yaml.safe_load(f)
-    _dictConfig(data)
-    return logging.getLogger(name=name)
-
-
-root_logger = get_logger()
 
 logging.getLogger("paramiko").setLevel(logging.CRITICAL)
 
@@ -67,14 +57,16 @@ def offshell(name, load_system_host_keys, load_ssh_config, ssh_config, etcd):
             )
         )
 
-    connection_d = {
-        "hostname": node.public_ips[0],
-        "username": node.extra["user"]
-        if "user" in node.extra
-        else node.extra.get("ssh_config", {}).get("User"),
-        "password": node.extra.get("password"),
-        "key_filename": node.extra.get("ssh_config", {}).get("IdentityFile"),
-    }
+    connection_d = dict(
+        hostname=node.public_ips[0],
+        username=(
+            node.extra["user"]
+            if "user" in node.extra
+            else node.extra["ssh_config"]["User"]
+        ),
+        key_filename=node.extra.get("ssh_config", {}).get("IdentityFile"),
+        **{"password": node.extra["password"]} if node.extra.get("password") else {}
+    )
 
     if ssh_config:
         if not connection_d["key_filename"]:
@@ -88,11 +80,13 @@ def offshell(name, load_system_host_keys, load_ssh_config, ssh_config, etcd):
             print(
                 "Host {host}\n{rest}".format(
                     host=host,
-                    rest=tab
-                    + tab.join(
-                        "{} {}\n".format(k, v[0] if isinstance(v, list) else v)
-                        for k, v in iteritems(node.extra["ssh_config"])
-                    )[:-1],
+                    rest="{}{}".format(
+                        tab,
+                        tab.join(
+                            "{} {}\n".format(k, v[0] if isinstance(v, list) else v)
+                            for k, v in iteritems(node.extra["ssh_config"])
+                        )[:-1],
+                    ),
                 )
             )
 
@@ -153,7 +147,23 @@ def offshell(name, load_system_host_keys, load_ssh_config, ssh_config, etcd):
             with open(load_ssh_config, "rt") as f:
                 config.parse(f)
             config_options = config.lookup(connection_d["hostname"])
-            connection_d["hostname"] = config_options["hostname"]
+            connection_d.update(
+                {
+                    k: v
+                    for k, v in iteritems(config_options)
+                    if not k.startswith("user")
+                    and k
+                    not in frozenset(
+                        (
+                            "stricthostkeychecking",
+                            "passwordauthentication",
+                            "identityfile",
+                            "identitiesonly",
+                            "loglevel",
+                        )
+                    )
+                }
+            )
 
         client.set_missing_host_key_policy(paramiko.WarningPolicy())
         if not UseGSSAPI and not DoGSSAPIKeyExchange:

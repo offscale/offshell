@@ -38,12 +38,6 @@ if __name__ == "__main__":
             ),
         )
 
-    to_funcs = lambda *paths: (
-        partial(path.join, path.dirname(__file__), package_name, *paths),
-        partial(path.join, get_python_lib(prefix=""), package_name, *paths),
-    )
-    _data_join, _data_install_dir = to_funcs("_data")
-
     setup(
         name=package_name,
         author=__author__,
@@ -58,12 +52,10 @@ if __name__ == "__main__":
             "License :: OSI Approved :: Apache Software License",
             "Programming Language :: Python",
             "Programming Language :: Python :: 2.7",
+            "Programming Language :: Python :: 3",
         ],
         install_requires=["pyyaml"],
-        test_suite=package_name + ".tests",
+        test_suite="{}{}tests".format(package_name, path.sep),
         packages=find_packages(),
-        package_dir={package_name: package_name},
-        data_files=[
-            (_data_install_dir(), list(map(_data_join, listdir(_data_join()))))
-        ],
+        package_dir={package_name: package_name}
     )

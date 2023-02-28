@@ -1,3 +1,7 @@
+"""
+offshell command-line interface
+"""
+
 from argparse import ArgumentParser
 from os import path
 from os.path import expanduser
