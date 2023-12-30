@@ -7,14 +7,12 @@ import sys
 import traceback
 from collections import namedtuple
 from json import loads
-from logging.config import dictConfig as _dictConfig
 from os import path
 from os.path import exists, expanduser
 from sys import stderr
 
 import etcd3
 import paramiko
-import yaml
 from libcloud.compute.types import NodeState
 from offutils.util import iteritems
 from offutils_strategy_register import dict_to_node
@@ -23,7 +21,7 @@ from paramiko.ssh_gss import GSS_AUTH_AVAILABLE
 from offshell import interactive
 
 __author__ = "Samuel Marks"
-__version__ = "0.0.6"
+__version__ = "0.0.7"
 
 
 logging.getLogger("paramiko").setLevel(logging.CRITICAL)
