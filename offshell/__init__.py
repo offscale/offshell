@@ -22,6 +22,7 @@ from offshell import interactive
 
 __author__ = "Samuel Marks"
 __version__ = "0.0.7"
+__description__ = "offshell opens an interactive shell into your offscale node. It uses paramiko, a Python implementation of the SSHv2 protocol. It can also output in OpenSSH (e.g.: ~/.ssh/config) format."
 
 
 logging.getLogger("paramiko").setLevel(logging.CRITICAL)
