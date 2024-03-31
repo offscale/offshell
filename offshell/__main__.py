@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 offshell command-line interface
 """
